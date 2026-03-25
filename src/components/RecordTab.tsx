@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Recipe, RecipeStep, parseSteps, parseStirSteps, getX3RuleSteps } from '@/lib/types';
+import { Recipe, RecipeStep, TimerStepData, parseSteps, parseStirSteps, getX3RuleSteps, formatTime } from '@/lib/types';
+import BrewTimer from './BrewTimer';
 
 interface Props {
   selectedRecipeId: number | null;
@@ -22,6 +23,9 @@ export default function RecordTab({ selectedRecipeId, onSaved }: Props) {
   const [rating, setRating] = useState(0);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
+  const [timerData, setTimerData] = useState<TimerStepData[] | null>(null);
+  const [totalBrewTime, setTotalBrewTime] = useState<number | null>(null);
 
   const fetchRecipes = useCallback(async () => {
     const res = await fetch('/api/recipes');
@@ -97,6 +101,8 @@ export default function RecordTab({ selectedRecipeId, onSaved }: Props) {
         total_amount: totalAmount || null,
         rating: rating || null,
         notes: notes || null,
+        timer_data: timerData ? JSON.stringify(timerData) : null,
+        total_brew_time: totalBrewTime || null,
       }),
     });
 
@@ -107,6 +113,9 @@ export default function RecordTab({ selectedRecipeId, onSaved }: Props) {
     setActualSteps([]);
     setRating(0);
     setNotes('');
+    setTimerData(null);
+    setTotalBrewTime(null);
+    setShowTimer(false);
     onSaved();
   };
 
@@ -227,6 +236,31 @@ export default function RecordTab({ selectedRecipeId, onSaved }: Props) {
             <div className="mt-2 text-right text-sm font-semibold text-warm-700">
               총 추출량: {totalAmount}g
             </div>
+          </div>
+        )}
+
+        {/* Timer */}
+        {refSteps.length > 0 && (
+          <div>
+            {showTimer ? (
+              <BrewTimer
+                steps={refSteps}
+                onComplete={(data, total) => {
+                  setTimerData(data);
+                  setTotalBrewTime(total);
+                  setShowTimer(false);
+                }}
+                onCancel={() => setShowTimer(false)}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowTimer(true)}
+                className="w-full py-2 border-2 border-dashed border-warm-300 text-warm-600 rounded-xl text-sm font-medium hover:bg-warm-50 transition-colors"
+              >
+                {timerData ? `✓ 추출 시간 기록됨 (${formatTime(totalBrewTime ?? 0)})` : '⏱ 타이머 사용하기'}
+              </button>
+            )}
           </div>
         )}
 

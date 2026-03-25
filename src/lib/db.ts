@@ -59,6 +59,8 @@ function initializeDb(db: Database.Database) {
       total_amount REAL,
       rating INTEGER CHECK(rating >= 1 AND rating <= 5),
       notes TEXT,
+      timer_data TEXT,
+      total_brew_time REAL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
     );

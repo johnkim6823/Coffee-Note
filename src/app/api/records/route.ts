@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
   const db = getDb();
 
   const result = db.prepare(`
-    INSERT INTO records (recipe_id, brew_type, brew_date, dose, water_temp, steps, total_amount, rating, notes)
-    VALUES (@recipe_id, @brew_type, @brew_date, @dose, @water_temp, @steps, @total_amount, @rating, @notes)
+    INSERT INTO records (recipe_id, brew_type, brew_date, dose, water_temp, steps, total_amount, rating, notes, timer_data, total_brew_time)
+    VALUES (@recipe_id, @brew_type, @brew_date, @dose, @water_temp, @steps, @total_amount, @rating, @notes, @timer_data, @total_brew_time)
   `).run({
     recipe_id: body.recipe_id,
     brew_type: body.brew_type,
@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
     total_amount: body.total_amount ?? null,
     rating: body.rating ?? null,
     notes: body.notes ?? null,
+    timer_data: body.timer_data ?? null,
+    total_brew_time: body.total_brew_time ?? null,
   });
 
   const newRecord = db.prepare(`

@@ -34,6 +34,11 @@ export interface Recipe {
   updated_at: string;
 }
 
+export interface TimerStepData {
+  label: string;
+  duration: number; // seconds
+}
+
 export interface BrewRecord {
   id: number;
   recipe_id: number;
@@ -45,10 +50,23 @@ export interface BrewRecord {
   total_amount: number | null;
   rating: number | null;
   notes: string | null;
+  timer_data: string | null; // JSON string of TimerStepData[]
+  total_brew_time: number | null; // seconds
   created_at: string;
   // joined fields
   bean_name?: string;
   roastery?: string;
+}
+
+export function parseTimerData(json: string | null): TimerStepData[] {
+  if (!json) return [];
+  try { return JSON.parse(json); } catch { return []; }
+}
+
+export function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 export function getX3RuleSteps(dose: number): RecipeStep[] {

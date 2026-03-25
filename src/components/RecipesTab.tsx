@@ -33,6 +33,49 @@ export default function RecipesTab({ onStartRecord }: Props) {
     fetchRecipes();
   };
 
+  const handleExport = () => {
+    const data = JSON.stringify(recipes.filter(r => !r.is_default), null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `coffee-recipes-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        const arr = Array.isArray(imported) ? imported : [imported];
+        for (const recipe of arr) {
+          const rest = { ...recipe };
+          delete rest.id;
+          delete rest.is_default;
+          delete rest.created_at;
+          delete rest.updated_at;
+          await fetch('/api/recipes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rest),
+          });
+        }
+        fetchRecipes();
+        alert(`${arr.length}개의 레시피를 가져왔습니다.`);
+      } catch {
+        alert('잘못된 파일 형식입니다.');
+      }
+    };
+    input.click();
+  };
+
   if (showForm || editingRecipe) {
     return (
       <RecipeForm
@@ -57,12 +100,28 @@ export default function RecipesTab({ onStartRecord }: Props) {
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-warm-800">레시피 목록</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-warm-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-warm-700 transition-colors"
-        >
-          + 레시피 추가
-        </button>
+        <div className="flex gap-1.5">
+          <button
+            onClick={handleImport}
+            className="bg-gray-100 text-gray-600 px-2 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+            title="가져오기"
+          >
+            가져오기
+          </button>
+          <button
+            onClick={handleExport}
+            className="bg-gray-100 text-gray-600 px-2 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+            title="내보내기"
+          >
+            내보내기
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-warm-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-warm-700 transition-colors"
+          >
+            + 추가
+          </button>
+        </div>
       </div>
 
       {sectionOrder.map(type => {
